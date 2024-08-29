@@ -1,0 +1,125 @@
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import Product from "./Product";
+import Form from "react-bootstrap/Form";
+import InputGroup from "react-bootstrap/InputGroup";
+import Col from "react-bootstrap/Col";
+import "./market.scss";
+import useAxiosPrivate from "../../../hooks/useAxiosPrivate";
+const HomeProduct = () => {
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState("");
+  const axios = useAxiosPrivate();
+  const [sort, setSort] = useState('price');
+  const [sortOrder, setSortOrder] = useState('asc');
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await axios.get("/api/categorie/");
+      setCategories(data);
+    };
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        let url = `/api/products?sort=${sort}&sortOrder=${sortOrder}`;
+        if (selectedCategory) {
+          url = `/api/products/bycategory/${selectedCategory}`;
+        }
+        const { data } = await axios.get(url);
+        setProducts(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchProducts();
+  }, [selectedCategory, sort, sortOrder]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        let url = `/api/products?sort=${sort}&sortOrder=${sortOrder}`;
+        if (selectedCategory) {
+          url = `/api/products/bycategory/${selectedCategory}`;
+        }
+        const { data } = await axios.get(url);
+        setProducts(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchProducts();
+  }, [])
+
+
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value);
+  };
+  function handleSortChange(event) {
+    setSort(event.target.value);
+  }
+
+  function handleSortOrderChange(event) {
+    setSortOrder(event.target.value);
+  }
+  return (
+    <div>
+      <div className="catsearchcenter">
+        <select
+          className="categoriehome"
+          value={selectedCategory}
+          onChange={handleCategoryChange}
+        >
+          <option value="">All categories</option>
+          {categories.map((category) => (
+            <option key={category._id} value={category.name}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+
+
+        <form>
+          <input
+            className="search"
+            placeholder="Search Products"
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </form>
+        <div>
+          <form style={{ marginRight: 25 }}>
+            <label style={{ color: "white", marginRight: 10, marginLeft: 20 }}>Sort by:</label>
+            <select id="sort" value={sort} onChange={handleSortChange} style={{ borderRadius: 20, backgroundColor: "White", color: "black" }}>
+              <option value="price">Price</option>
+            </select>
+            <label htmlFor="sortOrder" style={{ color: "white", marginRight: 10, marginLeft: 20 }}>Sort order:</label>
+            <select id="sortOrder" value={sortOrder} onChange={handleSortOrderChange} style={{ borderRadius: 20, backgroundColor: "White", color: "black" }}>
+              <option value="asc" style={{ backgroundColor: "white", color: "black" }}>Ascending</option>
+              <option value="desc" style={{ backgroundColor: "white", color: "black" }}>Descending</option>
+            </select>
+          </form>
+        </div>
+      </div>
+      <Link to={'/addprod'}>
+
+        <button style={{ marginLeft: 350 }}>add product</button>
+      </Link>
+      <div className="marktes">
+        {products
+          .filter((product) => {
+            return search.toLowerCase() === ""
+              ? product
+              : product.name.toLowerCase().includes(search);
+          })
+          .map((product) => (
+            <Product setProducts={setProducts} product={product} className="posts"></Product>
+          ))}
+      </div>
+    </div>
+  );
+};
+
+export default HomeProduct;
